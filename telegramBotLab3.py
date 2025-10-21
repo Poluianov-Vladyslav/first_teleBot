@@ -6,7 +6,6 @@ import os
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 
-TELEGRAM_TOKEN = config["TELEGRAM_TOKEN"]
 updater = Updater(TELEGRAM_TOKEN)
 
 chat_mode = {}
@@ -78,3 +77,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
