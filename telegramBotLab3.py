@@ -2,10 +2,9 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
 import g4f
 import json
+import os
 
-
-with open("config.json", "r", encoding="utf-8") as f:
-    config = json.load(f)
+TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 
 TELEGRAM_TOKEN = config["TELEGRAM_TOKEN"]
 updater = Updater(TELEGRAM_TOKEN)
@@ -77,4 +76,5 @@ def main():
     updater.idle()
 
 if __name__ == "__main__":
+
     main()
