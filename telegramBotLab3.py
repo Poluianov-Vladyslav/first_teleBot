@@ -1,15 +1,13 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 import g4f
 import json
 import os
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 
-updater = Updater(TELEGRAM_TOKEN)
-
 chat_mode = {}
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("Студент", callback_data="Студент")],
         [InlineKeyboardButton("IT-технології", callback_data="IT-технології")],
@@ -17,28 +15,27 @@ def start(update: Update, context: CallbackContext):
         [InlineKeyboardButton("Prompt ChatGPT", callback_data="Prompt ChatGPT")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("Привіт! Як я можу вам сьогодні допомогти?", reply_markup=reply_markup)
+    await update.message.reply_text("Привіт! Як я можу вам сьогодні допомогти?", reply_markup=reply_markup)
 
-
-def button_handler(update: Update, context: CallbackContext):
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     user_id = query.from_user.id
 
     text = query.data
     if text == "Студент":
-        query.message.reply_text("Студент: Полуянов Владислав\nГрупа: ІО-21")
+        await query.message.reply_text("Студент: Полуянов Владислав\nГрупа: ІО-21")
     elif text == "IT-технології":
-        query.message.reply_text("Python, Java, Linux")
+        await query.message.reply_text("Python, Java, Linux")
     elif text == "Контакти":
-        query.message.reply_text("Телефон: +380976937073\nEmail: vladpolianov@gmail.com")
+        await query.message.reply_text("Телефон: +380976937073\nEmail: vladpolianov@gmail.com")
     elif text == "Prompt ChatGPT":
         chat_mode[user_id] = True
-        query.message.reply_text(
+        await query.message.reply_text(
             "Тепер ваші повідомлення надсилаються ChatGPT. Щоб вийти, напишіть /stop_chat"
         )
 
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     text = update.message.text
 
@@ -49,32 +46,30 @@ def handle_message(update: Update, context: CallbackContext):
                 messages=[{"role": "user", "content": text}],
                 provider=None
             )
-            update.message.reply_text(response)
+            await update.message.reply_text(response)
         except Exception as e:
-            update.message.reply_text("Виникла помилка при зверненні до ChatGPT.")
+            await update.message.reply_text("Виникла помилка при зверненні до ChatGPT.")
     else:
-        update.message.reply_text("Виберіть опцію з меню або натисніть /start")
+        await update.message.reply_text("Виберіть опцію з меню або натисніть /start")
 
-
-def stop_chat(update: Update, context: CallbackContext):
+async def stop_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if chat_mode.get(user_id):
         chat_mode.pop(user_id)
-        update.message.reply_text("Ви вийшли з режиму ChatGPT.")
+        await update.message.reply_text("Ви вийшли з режиму ChatGPT.")
     else:
-        update.message.reply_text("Ви не були в режимі ChatGPT.")
-def main():
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("stop_chat", stop_chat))
-    dp.add_handler(CallbackQueryHandler(button_handler))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+        await update.message.reply_text("Ви не були в режимі ChatGPT.")
 
-    print("Бот запущений! Очікування повідомлень")
-    updater.start_polling()
-    updater.idle()
+def main():
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("stop_chat", stop_chat))
+    app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("Бот запущений! Очікування повідомлень...")
+    app.run_polling()
 
 if __name__ == "__main__":
-
     main()
 
