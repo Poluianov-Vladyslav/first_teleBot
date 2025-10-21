@@ -1,1 +1,0 @@
-worker: python telegramBotLab3.py
